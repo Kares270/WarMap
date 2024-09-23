@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #map {
+            height: 90vh;
+            width: 100%;
+        }
+
+        /* Icon creation and edit menus */
+        .icon-menu {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .icon-menu ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .icon-menu ul li {
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .icon-menu ul li:hover {
+            background-color: #eee;
+        }
+
+        /* Custom CSS for icon size */
+        .custom-svg-icon {
+            width: 40px;
+            height: 40px;
+            display: inline-block;
+            overflow: hidden;
+        }
+
+        .custom-svg-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Context menu */
+        .context-menu {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 5px;
+            z-index: 1000;
+        }
+
+        .context-menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .context-menu ul li {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .context-menu ul li:hover {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <!-- Icon Creation Menu -->
+    <div id="iconMenu" class="icon-menu">
+        <h3>Create Icon</h3>
+        <label for="iconSelect">Select Icon:</label>
+        <select id="iconSelect">
+            <option value="barracks">Barracks</option>
+            <option value="base">Base</option>
+            <option value="flag">Flag</option>
+            <option value="hammer">Hammer</option>
+        </select>
+
+        <br><br>
+
+        <label for="colorSelect">Select Color:</label>
+        <input type="color" id="colorSelect" value="#ff0000">
+
+        <br><br>
+
+        <label for="iconName">Enter Name:</label>
+        <input type="text" id="iconName">
+
+        <br><br>
+
+        <label for="iconDescription">Enter Description:</label>
+        <textarea id="iconDescription"></textarea>
+
+        <br><br>
+
+        <br><br>
+
+        <button id="createIcon">Create Icon</button>
+        <button id="cancelIcon">Cancel</button>
+    </div>
+
+    <!-- Edit Icon Menu -->
+    <div id="editIconMenu" class="icon-menu">
+        <h3>Edit Icon</h3>
+        <label for="editIconSelect">Select Icon:</label>
+        <select id="editIconSelect">
+            <option value="barracks">Barracks</option>
+            <option value="base">Base</option>
+            <option value="flag">Flag</option>
+            <option value="hammer">Hammer</option>
+        </select>
+
+        <br><br>
+
+        <label for="editColorSelect">Select Color:</label>
+        <input type="color" id="editColorSelect" value="#ff0000">
+
+        <br><br>
+
+        <label for="editIconName">Enter Name:</label>
+        <input type="text" id="editIconName">
+
+        <br><br>
+
+        <label for="editIconDescription">Enter Description:</label>
+        <textarea id="editIconDescription"></textarea>
+
+        <br><br>
+
+        <br><br>
+
+        <button id="updateIcon">Update Icon</button>
+        <button id="cancelEditIcon">Cancel</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+
+</body>
+</html>
