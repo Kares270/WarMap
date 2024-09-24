@@ -20,12 +20,19 @@ class MapIcon(db.Model):
     name = db.Column(db.String(100))
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    faction_id = db.Column(db.Integer, db.ForeignKey('faction.id'), nullable=True)  # Foreign key to faction
+    faction = db.relationship('Faction', backref='icons')  # Relationship to Faction
 
 class Connection(db.Model):
     __tablename__ = 'connection'  # Ensure the table name matches 'connection'
     id = db.Column(db.Integer, primary_key=True)
     icon_from_id = db.Column(db.Integer, db.ForeignKey('map_icon.id'), nullable=False)
     icon_to_id = db.Column(db.Integer, db.ForeignKey('map_icon.id'), nullable=False)
+
+class Faction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)  # Faction name
+    description = db.Column(db.String(200), nullable=True)  # Optional description
 
 # Create the tables if they don't exist
 with app.app_context():
@@ -34,19 +41,23 @@ with app.app_context():
 # Route to render the HTML template with the map
 @app.route('/')
 def index():
+    print(app.url_map)
     return render_template('index.html')
 
 # API endpoint to handle icon submission (create new icon)
 @app.route('/add_icon', methods=['POST'])
 def add_icon():
-    data = request.json
+    data = request.get_json()
+    faction_id = data.get('faction_id')  # Get the faction ID from the request
+    
     new_icon = MapIcon(
         x_position=data['x_position'],
         y_position=data['y_position'],
         icon_type=data['icon_type'],
-        icon_color=data['icon_color'],  # Store the color
+        icon_color=data['icon_color'],
         name=data['name'],
-        description=data['description']
+        description=data['description'],
+        faction_id=faction_id  # Save the faction ID
     )
     db.session.add(new_icon)
     db.session.commit()
@@ -55,17 +66,26 @@ def add_icon():
 # API endpoint to get all icons
 @app.route('/get_icons', methods=['GET'])
 def get_icons():
-    icons = MapIcon.query.all()
-    icon_data = [{
-        'id': icon.id,
-        'x_position': icon.x_position,
-        'y_position': icon.y_position,
-        'icon_type': icon.icon_type,
-        'icon_color': icon.icon_color,
-        'name': icon.name,
-        'description': icon.description
-    } for icon in icons]
-    return jsonify(icon_data)
+    icons = MapIcon.query.all()  # Assuming you have a MapIcon model
+
+    icons_data = []
+    for icon in icons:
+        faction_name = icon.faction.name if icon.faction else "No faction"  # Fetch faction name
+        icon_data = {
+            'id': icon.id,
+            'icon_type': icon.icon_type,
+            'icon_color': icon.icon_color,
+            'name': icon.name,
+            'description': icon.description,
+            'x_position': icon.x_position,
+            'y_position': icon.y_position,
+            'faction_name': faction_name,  # Include faction name
+        }
+        icons_data.append(icon_data)
+
+    return jsonify(icons_data)
+
+
 
 # API endpoint to get a specific icon by ID
 @app.route('/get_icon/<int:icon_id>', methods=['GET'])
@@ -89,23 +109,51 @@ def get_icon(icon_id):
 # API endpoint to handle adding a connection between icons
 @app.route('/add_connection', methods=['POST'])
 def add_connection():
-    data = request.json
-    from_id = data['from_id']
-    to_id = data['to_id']
-    new_connection = Connection(icon_from_id=from_id, icon_to_id=to_id)
-    db.session.add(new_connection)
-    db.session.commit()
-    return jsonify({'success': True, 'id': new_connection.id})
+    try:
+        # Ensure the request data is JSON
+        data = request.get_json()
+
+        # Extract the icon_from_id and icon_to_id from the request data
+        icon_from_id = data.get('icon_from_id')
+        icon_to_id = data.get('icon_to_id')
+
+        if not icon_from_id or not icon_to_id:
+            return jsonify({"error": "Both icon_from_id and icon_to_id are required"}), 400
+
+        # Check that icon_from_id and icon_to_id are not the same
+        if icon_from_id == icon_to_id:
+            return jsonify({"error": "Cannot connect an icon to itself"}), 400
+
+        # Create a new connection entry (assuming Connection is the model handling connections)
+        new_connection = Connection(
+            icon_from_id=icon_from_id,
+            icon_to_id=icon_to_id
+        )
+
+        # Add the connection to the database
+        db.session.add(new_connection)
+        db.session.commit()
+
+        # Return success response
+        return jsonify({"success": True, "connection": {"from": icon_from_id, "to": icon_to_id}}), 201
+
+    except Exception as e:
+        # Handle errors
+        return jsonify({"error": str(e)}), 500
 
 # API endpoint to get all connections
 @app.route('/get_connections', methods=['GET'])
 def get_connections():
-    connections = Connection.query.all()
-    connection_data = [{
-        'from_id': connection.icon_from_id,
-        'to_id': connection.icon_to_id
-    } for connection in connections]
-    return jsonify(connection_data)
+    try:
+        connections = Connection.query.all()
+        connections_data = [
+            {"icon_from_id": connection.icon_from_id, "icon_to_id": connection.icon_to_id}
+            for connection in connections
+        ]
+        return jsonify(connections_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # API endpoint to get connections for a specific icon
 @app.route('/get_connections_for_icon/<int:icon_id>', methods=['GET'])
@@ -129,48 +177,94 @@ def delete_icon(icon_id):
 # API endpoint to update an icon's details and its connections
 @app.route('/update_icon/<int:icon_id>', methods=['POST'])
 def update_icon(icon_id):
-    data = request.json
-    icon = MapIcon.query.get(icon_id)
-    
-    if icon:
-        icon.icon_type = data['icon_type']
-        icon.icon_color = data['icon_color']
-        icon.name = data['name']
-        icon.description = data['description']
+    try:
+        data = request.get_json()  # Get the JSON data from the request
+
+        # Find the icon in the database by its ID
+        icon = MapIcon.query.get(icon_id)
+
+        if not icon:
+            return jsonify({"error": "Icon not found"}), 404
+
+        # Update the icon fields from the request data
+        icon.icon_type = data.get('icon_type', icon.icon_type)
+        icon.icon_color = data.get('icon_color', icon.icon_color)
+        icon.name = data.get('name', icon.name)
+        icon.description = data.get('description', icon.description)
+        
+        # Update the faction_id if provided
+        icon.faction_id = data.get('faction_id', icon.faction_id)
+
+        # Save the changes to the database
         db.session.commit()
 
-        # Update connections: remove old connections and add new ones
-        Connection.query.filter_by(icon_from_id=icon_id).delete()  # Remove old connections
-        db.session.commit()
+        return jsonify({"success": True}), 200
 
-        for to_id in data['connections']:
-            new_connection = Connection(icon_from_id=icon_id, icon_to_id=to_id)
-            db.session.add(new_connection)
-
-        db.session.commit()
-        return jsonify({'success': True})
-
-    return jsonify({'success': False, 'error': 'Icon not found'}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/delete_connection', methods=['POST'])
 def delete_connection():
-    data = request.get_json()
-    from_id = data.get('from_id')
-    to_id = data.get('to_id')
+    try:
+        # Get the JSON data from the request
+        data = request.get_json()
 
-    # Find the connection in the database
-    connection = Connection.query.filter(
-        ((Connection.icon_from_id == from_id) & (Connection.icon_to_id == to_id)) |
-        ((Connection.icon_from_id == to_id) & (Connection.icon_to_id == from_id))
-    ).first()
+        # Extract the 'from_id' and 'to_id' from the data
+        from_id = data.get('from_id')
+        to_id = data.get('to_id')
 
-    if connection:
-        db.session.delete(connection)
-        db.session.commit()
-        return jsonify({'success': True})
+        if not from_id or not to_id:
+            return jsonify({"error": "Both from_id and to_id are required"}), 400
+
+        # Find and delete the connection in the database
+        connection = Connection.query.filter_by(icon_from_id=from_id, icon_to_id=to_id).first()
+
+        if connection:
+            db.session.delete(connection)
+            db.session.commit()
+            return jsonify({"success": True}), 200
+        else:
+            return jsonify({"error": "Connection not found"}), 404
+
+    except Exception as e:
+        # Handle errors
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get_factions', methods=['GET'])
+def get_factions():
+    factions = Faction.query.all()
+    faction_list = [{'id': f.id, 'name': f.name} for f in factions]
+    return jsonify(faction_list)
+
+@app.route('/get_faction_name/<int:faction_id>', methods=['GET'])
+def get_faction_name(faction_id):
+    faction = Faction.query.get(faction_id)
+    if faction:
+        print(f"Fetched faction name: {faction.name} for faction_id: {faction_id}")  # Add logging
+        return jsonify({"name": faction.name})
     else:
-        return jsonify({'success': False, 'error': 'Connection not found'}), 404
+        return jsonify({"name": "No faction"}), 404
 
+@app.route('/get_faction_relations', methods=['GET'])
+def get_faction_relations():
+    factions = Faction.query.all()  # Assuming you have a Faction model
+    relations = FactionRelation.query.all()  # Assuming you have a FactionRelation model
+
+    faction_data = []
+    for faction in factions:
+        relation_row = {}
+        relation_row['faction_name'] = faction.name
+        relation_row['relations'] = {}
+
+        # Get the relationships for this faction
+        for relation in relations:
+            if relation.faction_id_1 == faction.id:
+                other_faction = Faction.query.get(relation.faction_id_2)
+                relation_row['relations'][other_faction.name] = relation.relation
+
+        faction_data.append(relation_row)
+
+    return jsonify(faction_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
