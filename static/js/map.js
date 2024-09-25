@@ -7,11 +7,13 @@ var editingIconId = null;
 // Initialize the map
 var map = L.map('map', {
     crs: L.CRS.Simple,
-    minZoom: -1
-});
+    minZoom: -1,
+    maxZoom: 2
+}).setView([0, 0], 0);
 var bounds = [[0, 0], [1717, 1770]];
 var image = L.imageOverlay('/static/wojna_frakcji_cropped11.png', bounds).addTo(map);
 map.fitBounds(bounds);
+map.setMaxBounds(bounds);
 
 // Function to open the icon creation modal
 map.on('dblclick', function(e) {
@@ -411,6 +413,7 @@ function loadConnections() {
             if (fromMarker && toMarker) {
                 console.log(`Drawing connection from marker ${connection.icon_from_id} to marker ${connection.icon_to_id}`);
                 drawConnection(fromMarker, toMarker);
+                map.invalidateSize()
             } else {
                 console.error("Markers not found for connection:", connection);
             }
@@ -419,6 +422,80 @@ function loadConnections() {
         console.error("Failed to load connections from server:", error);
     });
 }
+ // Fetch the faction relations and generate the table
+ function loadFactionRelations() {
+    $.get('/get_faction_relations', function(factions) {
+        // Sort factions by their ID in ascending order
+        factions.sort(function(a, b) {
+            return a.id - b.id;  // Sort by ID (faction.id) field
+        });
 
+        // Clear the table before repopulating
+        $('#faction-table').empty();
+
+        // Create the first row (header) for sorted factions
+        var headerRow = $('<tr></tr>');
+        headerRow.append('<th></th>'); // Empty top-left corner cell
+        factions.forEach(function(faction) {
+            if (faction.faction_name.toLowerCase() !== 'no faction') {
+                headerRow.append('<th>' + faction.faction_name + '</th>');
+            }
+        });
+        $('#faction-table').append(headerRow); // Append the header row
+
+        // Create rows for each faction and their relations in sorted order
+        factions.forEach(function(faction) {
+            if (faction.faction_name.toLowerCase() === 'no faction') {
+                return;  // Skip "No faction"
+            }
+
+            // Create a new row for each faction (first cell contains faction name)
+            var row = $('<tr></tr>');
+            row.append('<td>' + faction.faction_name + '</td>');  // Faction name in first column
+
+            // Add relation cells, aligned with sorted factions
+            factions.forEach(function(relatedFaction) {
+                if (relatedFaction.faction_name.toLowerCase() !== 'no faction') {
+                    var relation = faction.relations[relatedFaction.faction_name];
+                    var color = getRelationColor(relation);  // Get background color for relation
+                    var cell = $('<td>' + (relation || '-') + '</td>').css('background-color', color);
+                    row.append(cell);  // Add relation cell to row
+                }
+            });
+
+            // Append the completed row to the table
+            $('#faction-table').append(row);
+        });
+    });
+}
+
+// Function to return the background color for each relation type
+function getRelationColor(relation) {
+    switch (relation ? relation.toLowerCase() : '') {
+        case 'friendly':
+            return '#34a853';  // Green for Friendly
+        case 'hostile':
+            return '#ff6d01';  // Orange for Hostile
+        case 'neutral':
+            return '#fbbc04';  // Yellow for Neutral
+        case 'koid':
+            return '#c4240c';  // Red for KOID
+        case 'x':
+            return '#bdbdbd';  // Gray for X
+        default:
+            return '#FFFFFF';  // Default to white if no match
+    }
+}
+
+
+
+
+
+
+// Call the function to load faction relations on page load
+loadFactionRelations();
 // Initial call to load icons and connections
 loadIcons();
+
+
+

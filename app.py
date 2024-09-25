@@ -31,13 +31,38 @@ class Connection(db.Model):
 
 class Faction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True)  # Faction name
-    description = db.Column(db.String(200), nullable=True)  # Optional description
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(200))
+
+    def get_relations(self):
+        relations = FactionRelation.query.filter(
+            (FactionRelation.faction_id_1 == self.id) | 
+            (FactionRelation.faction_id_2 == self.id)
+        ).all()
+
+        relations_dict = {}
+        for relation in relations:
+            other_faction_id = relation.faction_id_2 if relation.faction_id_1 == self.id else relation.faction_id_1
+            other_faction = Faction.query.get(other_faction_id)
+            relations_dict[other_faction.name] = relation.relation_type  # e.g., "Friendly", "Hostile"
+        return relations_dict
+
+
+class FactionRelation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    faction_id_1 = db.Column(db.Integer, db.ForeignKey('faction.id'))
+    faction_id_2 = db.Column(db.Integer, db.ForeignKey('faction.id'))
+    relation_type = db.Column(db.String(50))  # "Friendly", "Hostile", etc.
+
+    faction_1 = db.relationship('Faction', foreign_keys=[faction_id_1])
+    faction_2 = db.relationship('Faction', foreign_keys=[faction_id_2])
+
 
 # Create the tables if they don't exist
 with app.app_context():
     db.create_all()
 
+ 
 # Route to render the HTML template with the map
 @app.route('/')
 def index():
@@ -84,8 +109,6 @@ def get_icons():
         icons_data.append(icon_data)
 
     return jsonify(icons_data)
-
-
 
 # API endpoint to get a specific icon by ID
 @app.route('/get_icon/<int:icon_id>', methods=['GET'])
@@ -247,24 +270,18 @@ def get_faction_name(faction_id):
 
 @app.route('/get_faction_relations', methods=['GET'])
 def get_faction_relations():
-    factions = Faction.query.all()  # Assuming you have a Faction model
-    relations = FactionRelation.query.all()  # Assuming you have a FactionRelation model
+    factions = Faction.query.all()  # Retrieve all factions
 
     faction_data = []
     for faction in factions:
-        relation_row = {}
-        relation_row['faction_name'] = faction.name
-        relation_row['relations'] = {}
-
-        # Get the relationships for this faction
-        for relation in relations:
-            if relation.faction_id_1 == faction.id:
-                other_faction = Faction.query.get(relation.faction_id_2)
-                relation_row['relations'][other_faction.name] = relation.relation
-
-        faction_data.append(relation_row)
+        faction_data.append({
+            'id': faction.id,
+            'faction_name': faction.name,
+            'relations': faction.get_relations()  # Call the method to get relations
+        })
 
     return jsonify(faction_data)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

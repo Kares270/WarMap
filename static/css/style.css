@@ -1,3 +1,46 @@
+
+/* Icon creation and edit menus */
+.icon-menu {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 1000;
+    display: none;
+}
+body
+{
+    background-color: black;
+}
+.icon-menu ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.icon-menu ul li {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.icon-menu ul li:hover {
+    background-color: #eee;
+}
+
+/* Custom CSS for icon size */
+.custom-svg-icon {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    overflow: hidden;
+}
+
+.custom-svg-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Context menu */
 .context-menu {
     position: absolute;
     background-color: white;
@@ -5,15 +48,225 @@
     padding: 5px;
     z-index: 1000;
 }
+
 .context-menu ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
+
 .context-menu ul li {
     padding: 5px 10px;
     cursor: pointer;
 }
+
 .context-menu ul li:hover {
     background-color: #eee;
+}
+
+
+/* Container for the device background image */
+#device-container {
+    width: 100%;
+    max-width: 100vw;
+    height: 100vh;
+    background: url("/static/images/pda14k.png") no-repeat center center;
+    background-size: 105% 100%;  /* Slightly stretched */
+    position: relative;
+}
+
+/* Tab navigation */
+
+.tab-button {
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.tab-button:hover {
+    background-color: #555;
+}
+
+/* Hide content by default and show when active */
+.tab-content {
+    flex-grow: 1;
+    display: none;
+    position: absolute;
+    top: 17%;
+    left: 8%;
+    width: 79%;
+    height: 71%;
+    z-index: 5;
+}
+
+/* Map and left-side menu layout */
+#content-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+#map-container {
+    width: 79%;
+    height: 100%;  /* Make sure the map container takes full height */
+    border:solid;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    background-color:transparent;
+   
+}
+
+/* Left side menu container */
+/* Container for the left menu */
+#left-menu-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+    background-color: #33333359;
+    height: 97%;
+    gap: 10px;
+    width: 20%;     /* Space between buttons */
+}
+
+/* Style the buttons inside the left menu */
+.left-menu-button {
+    width: 100%;  /* Full width of the container */
+    padding: 10px;
+    background-color: #444;
+    color: white;
+    border: 1px solid #555;
+    text-align: left;  /* Align text to the left */
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Hover effect */
+.left-menu-button:hover {
+    background-color: #555;
+}
+
+/* Optional: Active state styling for selected buttons */
+.left-menu-button.active {
+    background-color: #666;
+    border-color: #888;
+}
+
+.left-menu-text-center
+{
+    background-color: #666;
+    color: white;
+    width: 90%;
+    text-align: center;
+    padding:10px;
+}
+
+/* Faction table styling */
+#faction-tab #faction-table-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+#faction-table {
+    border-collapse: collapse;
+    width: 100%;
+    height: 100%;
+    table-layout: fixed;  /* Ensures all columns have equal width */
+}
+
+/* Table cells and headers styling */
+#faction-table th, #faction-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Sticky first row (faction names at the top) */
+#faction-table th {
+    background-color: #333;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* Sticky first column (faction names on the left) */
+#faction-table td:first-child, #faction-table th:first-child {
+    background-color: #333;
+    color: white;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    text-align: left;
+    padding-left: 10px;
+    width: 150px;  /* Fixed width for the first column */
+}
+
+/* Adjust cell sizes for even distribution */
+#faction-table td {
+    width: auto;
+    height: auto;
+    word-wrap: break-word;  /* Ensures text wraps within cells */
+}
+
+
+/* Styled buttons */
+/* Container for the tab buttons */
+#tab-buttons {
+    justify-content: space-around;
+    background-color: #222;
+    padding: 10px 0;
+    width: 100%;
+    position: absolute;
+    top: 11.2%;
+    left: 7.7%;
+    width: 63%;
+    justify-content: space-around;
+    background-color: #33333300;
+    padding: 10px;
+    z-index: 10;
+}
+
+/* Button Styling */
+.styled-tab-button {
+    background-color: #333;
+    color: white;
+    border: 1px solid #e7e7e7;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    text-transform: uppercase;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    
+    
+}
+
+/* Hover effect */
+.styled-tab-button:hover {
+    background-color: #555;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Active button styling */
+.styled-tab-button.active {
+    background-color: #555;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Optional button pressed effect */
+.styled-tab-button:active {
+    background-color: #666;
 }

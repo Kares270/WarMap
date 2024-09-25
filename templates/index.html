@@ -4,82 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Map</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        #map {
-            height: 90vh;
-            width: 100%;
-        }
-
-        /* Icon creation and edit menus */
-        .icon-menu {
-            position: absolute;
-            background-color: white;
-            border: 1px solid #ccc;
-            padding: 10px;
-            z-index: 1000;
-            display: none;
-        }
-
-        .icon-menu ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .icon-menu ul li {
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .icon-menu ul li:hover {
-            background-color: #eee;
-        }
-
-        /* Custom CSS for icon size */
-        .custom-svg-icon {
-            width: 40px;
-            height: 40px;
-            display: inline-block;
-            overflow: hidden;
-        }
-
-        .custom-svg-icon svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Context menu */
-        .context-menu {
-            position: absolute;
-            background-color: white;
-            border: 1px solid #ccc;
-            padding: 5px;
-            z-index: 1000;
-        }
-
-        .context-menu ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .context-menu ul li {
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        .context-menu ul li:hover {
-            background-color: #eee;
-        }
+      
     </style>
 </head>
 <body>
-
-    <div id="map"></div>
-
+    <div id="device-container">
+        <!-- Tab Navigation -->
+        <div id="tab-buttons">
+            <button class="styled-tab-button" onclick="openTab('map-tab')">Map</button>
+            <button class="styled-tab-button" onclick="openTab('faction-tab')">Factions</button>
+        </div>
+    
+        <!-- Map Tab -->
+        <div id="map-tab" class="tab-content">
+            <div id="content-overlay">
+                <div id="map-container">
+                    <div id="map"></div>
+                </div>
+                <div id="left-menu-container">
+                        <p class="left-menu-text-center">Menu</p>
+                        <button class="left-menu-button">Test1</button>
+                        <button class="left-menu-button">Test2</button>
+                        <button class="left-menu-button">Test3</button>
+                        <button class="left-menu-button">Test4</button>
+                    
+                </div>
+            </div>
+        </div>
+    
+        <!-- Faction Tab -->
+        <div id="faction-tab" class="tab-content" style="display: none;">
+            <div id="faction-table-container">
+                <table id="faction-table">
+                    <!-- Table rows will be added dynamically here -->
+                </table>
+            </div>
+            
+        </div>
+    </div>
+    
     <!-- Icon Creation Menu -->
     <div id="iconMenu" class="icon-menu">
         <h3>Create Icon</h3>
@@ -158,8 +126,9 @@
         <button id="updateIcon">Update Icon</button>
         <button id="cancelEditIcon">Cancel</button>
     </div>
+    
 
     <script src="{{ url_for('static', filename='js/map.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='js/EventListeners.js') }}"></script>
 </body>
 </html>
