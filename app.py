@@ -3,7 +3,18 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 
 app = Flask(__name__)
-
+#INSERT INTO faction_relation (faction_id_1, faction_id_2, relation_type)
+#VALUES
+   # (10, 1, 'NEUTRAL'), -- samotnicy
+	#(10, 2, 'KOID'), -- WOJSKO
+	#(10, 3, 'NEUTRAL'), -- POWINNOŚĆ
+	#(10, 4, 'NEUTRAL'), -- WOLNOŚĆ
+	#(10, 5, 'KOID'), -- RENEGACI
+	#(10, 6, 'HOSTILE'), -- BANDYCI
+	#(10, 7, 'KOID'), -- MONOLIT
+	#(10, 8, 'NEUTRAL'), -- EKOLODZY
+	#(10, 9, 'NEUTRAL'), -- Krety
+	#(10, 10, 'X') --Fortis
 # Configure the PostgreSQL database connection
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Admin%21006@localhost:5432/Strefa'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
